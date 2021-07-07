@@ -3,9 +3,14 @@ import traceback
 import copy
 import Node as ND
 import WebScraper as WB
+import sys
 
-def MCTS(root, terminus, webScraper, euct):
-    EXPL_CONST = 0.66
+def MCTS(root, terminus, webScraper, euct, exp):
+    EXPL_CONST = exp
+    numChildren = 10
+
+    if euct == True:
+        numChildren = 1
 
     terminusLinks = list(terminus.links.keys())
     expandedChildren = {} 
@@ -16,7 +21,7 @@ def MCTS(root, terminus, webScraper, euct):
         # UCT
         node = root
         while len(node.children) != 0:
-            print("   UCT")
+            print("   UCT   " + node.page.title + "   " + str(len(node.children)))
             bestUCT = -1.0
             bestIndex = -1
             i = 0
@@ -25,10 +30,10 @@ def MCTS(root, terminus, webScraper, euct):
             if euct is True:
                 actionIndex = random.randrange(0, 100)
                 if actionIndex < EXPL_CONST*100:
-                    #addedNode = node.addChildByProb(webScraper)            
-                    addedNode = node.addBestChildByProb(webScraper)
-                if addedNode is not False:
-                    expandedChildren.update(addedNode)
+                    addedNode = node.addChildByProb(webScraper)         
+                    #addedNode = node.addBestChildByProb(webScraper)
+                if addedNode != False:
+                    expandedChildren.update(addedNode) 
 
 
             for child in node.children:
@@ -44,7 +49,7 @@ def MCTS(root, terminus, webScraper, euct):
         # Expand
         if node.numOfVisits != 0 and len(node.childrenLinks) != 0:
             print("   Expand")
-            outcome, children, distance, path = node.expandChildren(terminus.title, expandedChildren, webScraper)
+            outcome, children, distance, path = node.expandChildren(terminus.title, expandedChildren, webScraper, numChildren)
             if outcome == True:
                 expandedChildren.update(children)
                 return outcome, distance, path, len(expandedChildren), i 
@@ -72,12 +77,26 @@ def MCTS(root, terminus, webScraper, euct):
 
 
 webScraper = WB.WebScraper()
-
-lines = []
+argsPassed = True
+runEpct = False
 i = 0
 
-while i < 100:
-    startPage, endPage = webScraper.getStartEndPair(3)
+filenamePrefix = sys.argv[1]
+depthOfTarget = int(sys.argv[2])
+expCont = float(sys.argv[3])
+numOfTrials = int(sys.argv[4])
+argType = sys.argv[5]
+
+if len(sys.argv) < 6:
+    print("python WikipediaGame.py Data/arg/arg-x-y-z/Data_1/ z 0.5 100 EPCT")
+    argsPassed = False
+
+if argType != "UCT":
+    runEpct = True
+
+
+while i < numOfTrials and argsPassed:
+    startPage, endPage = webScraper.getStartEndPair(depthOfTarget)
 
     try:
         cosDist = webScraper.nlpSimilarity(startPage.title, endPage.title, [])
@@ -86,18 +105,21 @@ while i < 100:
         
         if cosDist > 0:
             root = ND.Node(None, startPage, 0)
-
-            foundTarget, distance, path, numNodes, numSims = MCTS(root, endPage, webScraper, True)
-
+            foundTarget, distance, path, numNodes, numSims = MCTS(root, endPage, webScraper, runEpct, expCont)
             simMethod = "W2V"
-            knowMethod = "JT"
-            expConstant = 0.05
 
-            line = startPage.title + "," + endPage.title + "," + str(foundTarget) + "," + str(distance) + "," + path + "," + str(numNodes) + "," + str(numSims) + "," + simMethod + "," + knowMethod + "," + str(expConstant) + "\n"
-            filename = "Data/" + str(i) + ".csv"
-            file = open(filename, "w")
-            file.write(line)
-            file.close()
+            try:
+                line = startPage.title + "," + endPage.title + "," + str(foundTarget) + "," + str(distance) + "," + path + "," + str(numNodes) + "," + str(numSims) + "," + simMethod + "," + argType + "," + str(expCont) + "\n"
+                filename = filenamePrefix + str(i) + ".csv"
+                file = open(filename, "w")
+                file.write(line)
+                file.close()
+            except:
+                line = "_,_," + str(foundTarget) + "," + str(distance) + ",_," + str(numNodes) + "," + str(numSims) + "," + simMethod + "," + argType + "," + str(expCont) + "\n"
+                filename = filenamePrefix + str(i) + ".csv"
+                file = open(filename, "w")
+                file.write(line)
+                file.close()
 
             i = i + 1
     except:

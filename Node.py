@@ -115,7 +115,7 @@ class Node:
         self.numOfVisits = self.numOfVisits + 1
 
 
-    def expandChildren(self, terminusName, expanded, webScraper):
+    def expandChildren(self, terminusName, expanded, webScraper, numChildren):
         links = self.childrenLinks
         expandedChildren = {}
 
@@ -146,7 +146,7 @@ class Node:
 
         for key in banditArms.keys():
             if key not in expandedArticles:
-                if len(self.children) < 1:
+                if len(self.children) < numChildren:
                     newPage = webScraper.wiki.page(key)
                     nodeToAdd = Node(self, newPage, self.depth+1)
                     self.children.append(nodeToAdd)

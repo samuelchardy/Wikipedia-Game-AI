@@ -7,7 +7,6 @@ import random
 import traceback
 from sklearn.metrics.pairwise import cosine_similarity
 import re
-import gensim.downloader as api
 import numpy
 
 
