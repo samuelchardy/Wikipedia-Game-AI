@@ -1,7 +1,7 @@
 # WikipediaGameAI
 
 ## Introduction
-Wikipedia is the worlds largest online encyclopedia, containing 6,277,220 unique articles in its English version.  The nature of the Wikipedia articles is to provide information on a topic, but the explanation of complex topics predicates reference to other articles required to provide definition.  Subsequently, Wikipedia articles provide a pathway from one topic to another closely related topic. The difficulty in this domain is two-fold, namely the large quantity of articles to search and the difficulty with determining if a new article gets you closer to the target article.
+Wikipedia is the worlds largest online encyclopedia, containing 6,277,220 unique articles in its English version.  The nature of the Wikipedia articles is to provide information on a topic, but the explanation of complex topics predicates reference to other articles required to provide definition.  Subsequently, Wikipedia articles provide a pathway from one topic to another closely related topic. This forms the basis of the Wikipedia game, where starting from a random page the players attempt to reach another page using only the incumbent page links. The difficulty in this domain is two-fold, namely the large quantity of articles to search and the difficulty with determining if a new article gets you closer to the target article.
 
 ## How Does it Work?
 Getting the articles:
