@@ -4,10 +4,8 @@ from bs4 import BeautifulSoup
 import urllib 
 import copy
 import random
-import traceback
 from sklearn.metrics.pairwise import cosine_similarity
 import re
-import numpy
 
 
 class WebScraper:

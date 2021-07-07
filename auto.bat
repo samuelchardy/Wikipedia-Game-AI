@@ -1,7 +1,7 @@
 
 FOR %%x IN (0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9) DO (
     mkdir Data\epct\epct-%%x-1-18\Data_1
-    python WikiGame.py Data/epct/epct-%%x-1-18/Data_1/ 18 %%x 100 EPCT
+    python Main.py Data/epct/epct-%%x-1-18/Data_1/ 18 %%x 100 EPCT
 )
 
 FOR %%x IN (6 9 15 18 24 27 33 36) DO (
