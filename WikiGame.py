@@ -56,7 +56,7 @@ def MCTS(root, terminus, webScraper, euct, exp):
 
         # Simulate
         print("   Simulate")
-        node.rollout(terminusLinks, terminus.title, webScraper)
+        node.rollout("RBRP", terminus.title, webScraper)
         
         # Backprop
         print("   Backprop")

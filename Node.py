@@ -68,40 +68,63 @@ class Node:
                 del self.reserveChildren[key]
                 del self.reserveDist[key]
 
-                self.makeReservesDist()
+                self.reserveDist = self.makeReservesDist(self.reserveChildren)
                 return {self.children[-1].page.title: self.depth+1}
            
 
 
-    def makeReservesDist(self):
-        self.reserveDist.clear()
+    def makeReservesDist(self, reserveChildren):
+        #self.reserveDist.clear()
+        reserveDist = {}
 
-        if len(self.reserveChildren) > 0:
-            resSum = sum(self.reserveChildren.values())
+        if len(reserveChildren) > 0:
+            resSum = sum(reserveChildren.values())
             
             if resSum != 0:
-                keys = list(self.reserveChildren.keys())
+                keys = list(reserveChildren.keys())
                 for i in range(len(keys)):
-                    self.reserveDist[keys[i]] = self.reserveChildren[keys[i]]/resSum
+                    reserveDist[keys[i]] = reserveChildren[keys[i]]/resSum
                     if i != 0:
-                        self.reserveDist[keys[i]] = self.reserveDist[keys[i]] + self.reserveDist[keys[i-1]]
+                        reserveDist[keys[i]] = reserveDist[keys[i]] + reserveDist[keys[i-1]]
+            return reserveDist
 
 
 
-    def rollout(self, terminusLinks, terminusName, webScraper):
+    def rollout(self, policy, terminusName, webScraper):
         page = self.page
         links = self.childrenLinks
         self.subTreeVal = 0
 
+
         for i in range(10):
+            actionIndex = None
+            action = None
+
             if len(links) == 0:
                 break
+            
+            if policy == "RBRP":
+                nlpScore = {}
 
-            actionIndex = random.randrange(0, len(links))
-            action = links[actionIndex]
-            action = action.replace(" ", "_")
+                for child in links:
+                    nlpScore[child] = webScraper.nlpSimilarity(child, terminusName, [])
+
+                sortedList = sorted(nlpScore.items(), key=lambda x:(-x[1],x[0]))
+                sortedList = dict(sortedList)
+                sortedDict = self.makeReservesDist(sortedList)
+                randAction = random.randrange(0, 100)
+
+                for key in sortedDict:
+                    if sortedDict[key]*100 > randAction:
+                        actionIndex = links.index(key)
+                        break 
+            else:
+                actionIndex = random.randrange(0, len(links))
 
             try:
+                action = links[actionIndex]
+                action = action.replace(" ", "_")
+                #print(action)
                 page = webScraper.wiki.page(action)
                 links = webScraper.filterLinks(list(page.links.keys()))
                 self.subTreeVal = self.subTreeVal + webScraper.nlpSimilarity(page.title, terminusName, links)
@@ -154,7 +177,7 @@ class Node:
                 else:
                     self.reserveChildren.update({key: banditArms[key]})
             links.remove(key)
-        self.makeReservesDist()
+        self.reserveDist = self.makeReservesDist(self.reserveChildren)
         return False, expandedChildren, None, None
 
 
