@@ -86,4 +86,4 @@ def MCTS(root, terminus, webScraper, euct, exp):
             if out.distance < minimum:
                 minimum = out.distance
                 finalOutput = out
-        return out.outcome, out.distance, out.path, out.numExpandedChildren, out.numSimulations
+        return finalOutput.outcome, finalOutput.distance, finalOutput.path, finalOutput.numExpandedChildren, finalOutput.numSimulations
