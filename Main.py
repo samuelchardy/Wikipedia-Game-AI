@@ -3,6 +3,9 @@ import Node as ND
 import WebScraper as WB
 import WikiGame as WG
 import sys
+import time
+
+startTime = time.time()
 
 webScraper = WB.WebScraper()
 argsPassed = True
@@ -16,7 +19,7 @@ numOfTrials = int(sys.argv[4])
 argType = sys.argv[5]
 
 if len(sys.argv) < 6:
-    print("python WikiGame.py Data/arg/arg-x-y-z/Data_1/ z 0.5 100 EPCT")
+    print("python Main.py Data/arg/arg-x-y-z/Data_1/ z 0.5 100 EPCT")
     argsPassed = False
 
 if argType != "UCT":
@@ -42,6 +45,12 @@ while i < numOfTrials and argsPassed:
                 file = open(filename, "w")
                 file.write(line)
                 file.close()
+
+                # exeTime = time.time() - startTime
+
+                # while True:
+                #     print(exeTime)
+
             except:
                 line = "_,_," + str(foundTarget) + "," + str(distance) + ",_," + str(numNodes) + "," + str(numSims) + "," + simMethod + "," + argType + "," + str(expCont) + "\n"
                 filename = filenamePrefix + str(i) + ".csv"
@@ -49,7 +58,13 @@ while i < numOfTrials and argsPassed:
                 file.write(line)
                 file.close()
 
+                # exeTime = time.time() - startTime
+
+                # while True:
+                #     print(exeTime)
+
             i = i + 1
     except:
         traceback.print_exc()
         print("Start fail - getting new start node")
+

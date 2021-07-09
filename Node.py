@@ -53,6 +53,9 @@ class Node:
 
 
     def addChildByProb(self, webScraper):
+        if self.reserveDist == None:
+            return False
+
         keys = list(self.reserveDist.keys())
         actionIndex = random.randrange(0, 100)
 
@@ -61,16 +64,26 @@ class Node:
 
         for key in keys:
             if self.reserveDist[key]*100 > actionIndex:
-                newPage = webScraper.wiki.page(key)
-                nodeToAdd = Node(self, newPage, self.depth+1)
+                if self.notAlreadyBeenTaken(key):
+                    newPage = webScraper.wiki.page(key)
+                    nodeToAdd = Node(self, newPage, self.depth+1)
 
-                self.children.append(nodeToAdd)
-                del self.reserveChildren[key]
-                del self.reserveDist[key]
+                    self.children.append(nodeToAdd)
+                    #del self.reserveChildren[key]
+                    #del self.reserveDist[key]
 
-                self.reserveDist = self.makeReservesDist(self.reserveChildren)
-                return {self.children[-1].page.title: self.depth+1}
-           
+                    #self.reserveDist = self.makeReservesDist(self.reserveChildren)
+                    return {self.children[-1].page.title: self.depth+1}
+                else:
+                    print("OH NO")
+                    return False
+
+
+    def notAlreadyBeenTaken(self, key):
+        for child in self.children:
+            if child.page.title == key:
+                return False
+        return True
 
 
     def makeReservesDist(self, reserveChildren):
@@ -118,7 +131,8 @@ class Node:
                     if sortedDict[key]*100 > randAction:
                         actionIndex = links.index(key)
                         break 
-            else:
+                
+            if action == None:
                 actionIndex = random.randrange(0, len(links))
 
             try:

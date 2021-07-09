@@ -1,7 +1,18 @@
 import random
 
+class Output:
+    def __init__(self, outcome, distance, path, numExpandedChildren, numSimulations):
+        self.outcome = outcome
+        self.distance = distance
+        self.path = path
+        self.numExpandedChildren = numExpandedChildren
+        self.numSimulations = numSimulations
+
+
+
 def MCTS(root, terminus, webScraper, euct, exp):
     EXPL_CONST = exp
+    output = []
     numChildren = 10
 
     if euct == True:
@@ -47,7 +58,7 @@ def MCTS(root, terminus, webScraper, euct, exp):
             outcome, children, distance, path = node.expandChildren(terminus.title, expandedChildren, webScraper, numChildren)
             if outcome == True:
                 expandedChildren.update(children)
-                return outcome, distance, path, len(expandedChildren), i 
+                output.append(Output(outcome, distance, path, len(expandedChildren), i))
             else:
                 expandedChildren.update(children)
                 if len(node.children) != 0:
@@ -66,6 +77,13 @@ def MCTS(root, terminus, webScraper, euct, exp):
             node = node.parent
             node.backpropUpdates(rolloutVal)
 
-    return False, "", "", len(expandedChildren), 300
-
-
+    if len(output) == 0:
+        return False, "", "", len(expandedChildren), 300
+    else:
+        minimum = -1
+        finalOutput = None
+        for out in output:
+            if out.distance < minimum:
+                minimum = out.distance
+                finalOutput = out
+        return out.outcome, out.distance, out.path, out.numExpandedChildren, out.numSimulations
