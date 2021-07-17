@@ -80,7 +80,7 @@ def MCTS(root, terminus, webScraper, euct, exp):
     if len(output) == 0:
         return False, "", "", len(expandedChildren), 300
     else:
-        minimum = -1
+        minimum = 10000000
         finalOutput = None
         for out in output:
             if out.distance < minimum:
