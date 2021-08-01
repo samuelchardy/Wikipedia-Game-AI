@@ -2,7 +2,7 @@ import random
 from math import sqrt
 from math import log
 import traceback
-import WebScraper as WB
+import Page as P
 
 
 class Node:
@@ -16,7 +16,7 @@ class Node:
         self.children = []
         self.reserveChildren = {}
         self.reserveDist = {}
-        self.childrenLinks = WB.WebScraper().filterLinks(list(self.page.links.keys()))
+        self.childrenLinks = list(self.page.links)
 
 
     def calcUCT(self):
@@ -41,7 +41,7 @@ class Node:
         newActionProb = self.reserveChildren[key] * EXPL_CONST * 100
 
         if actionIndex < newActionProb:
-            newPage = webScraper.wiki.page(key)
+            newPage = P.Page(key, webScraper.getPage(key))
             nodeToAdd = Node(self, newPage, self.depth+1)
 
             self.children.append(nodeToAdd)
@@ -65,17 +65,12 @@ class Node:
         for key in keys:
             if self.reserveDist[key]*100 > actionIndex:
                 if self.notAlreadyBeenTaken(key):
-                    newPage = webScraper.wiki.page(key)
+                    newPage = P.Page(key, webScraper.getPage(key))
                     nodeToAdd = Node(self, newPage, self.depth+1)
-
                     self.children.append(nodeToAdd)
-                    #del self.reserveChildren[key]
-                    #del self.reserveDist[key]
 
-                    #self.reserveDist = self.makeReservesDist(self.reserveChildren)
                     return {self.children[-1].page.title: self.depth+1}
                 else:
-                    print("OH NO")
                     return False
 
 
@@ -87,7 +82,6 @@ class Node:
 
 
     def makeReservesDist(self, reserveChildren):
-        #self.reserveDist.clear()
         reserveDist = {}
 
         if len(reserveChildren) > 0:
@@ -105,7 +99,7 @@ class Node:
 
     def rollout(self, policy, terminusName, webScraper):
         page = self.page
-        links = self.childrenLinks
+        links = list(self.childrenLinks)
         self.subTreeVal = 0
 
 
@@ -137,10 +131,10 @@ class Node:
 
             try:
                 action = links[actionIndex]
-                action = action.replace(" ", "_")
+                #action = action.replace(" ", "_")
                 #print(action)
-                page = webScraper.wiki.page(action)
-                links = webScraper.filterLinks(list(page.links.keys()))
+                page = P.Page(action, webScraper.getPage(action))
+                links = list(page.links)
                 self.subTreeVal = self.subTreeVal + webScraper.nlpSimilarity(page.title, terminusName, links)
                 #self.subTreeVal = self.subTreeVal + webScraper.genismSimilarity(page.title, terminusName)
             except:
@@ -157,15 +151,15 @@ class Node:
         expandedChildren = {}
 
         # Check if any of the links appear in target page links
-        terminusTitle = str(terminusName).replace("_", " ")
+        #terminusTitle = str(terminusName).replace("_", " ")
         for child in links:
-            if child == terminusTitle:
-                print("       FOUND " + str(terminusName))
-                print("           " + str(child))
+            if child == terminusName:
+                #print("       FOUND " + str(terminusName))
+                #print("           " + str(child))
                 path = str(terminusName)
                 node = self
                 while True:
-                    print("           " + str(node.page.title))
+                    #print("           " + str(node.page.title))
                     path = path + "###" + str(node.page.title) 
                     if node.parent == None:
                         break
@@ -184,7 +178,7 @@ class Node:
         for key in banditArms.keys():
             if key not in expandedArticles:
                 if len(self.children) < numChildren:
-                    newPage = webScraper.wiki.page(key)
+                    newPage = P.Page(key, webScraper.getPage(key))
                     nodeToAdd = Node(self, newPage, self.depth+1)
                     self.children.append(nodeToAdd)
                     expandedChildren.update({key: self.depth+1})

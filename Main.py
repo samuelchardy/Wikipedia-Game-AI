@@ -1,30 +1,32 @@
 import traceback
 import Node as ND
 import WebScraper as WB
-import WikiGame as WG
+import MCTS as MCTS
+import read_pickle as RP
 import sys
 import time
 
 startTime = time.time()
 
-webScraper = WB.WebScraper()
+wiki, redirs = RP.read()
+webScraper = WB.WebScraper(wiki, redirs)
 argsPassed = True
 runEpct = False
 i = 0
-
-filenamePrefix = sys.argv[1]
-depthOfTarget = int(sys.argv[2])
-expCont = float(sys.argv[3])
-numOfTrials = int(sys.argv[4])
-argType = sys.argv[5]
+filenamePrefix, depthOfTarget, expCont, numOfTrials, argType = None, None, None, 0, None
 
 if len(sys.argv) < 6:
     print("python Main.py Data/arg/arg-x-y-z/Data_1/ z 0.5 100 EPCT")
     argsPassed = False
+else:
+    filenamePrefix = sys.argv[1]
+    depthOfTarget = int(sys.argv[2])
+    expCont = float(sys.argv[3])
+    numOfTrials = int(sys.argv[4])
+    argType = sys.argv[5]
 
 if argType != "UCT":
     runEpct = True
-
 
 while i < numOfTrials and argsPassed:
     startPage, endPage = webScraper.getStartEndPair(depthOfTarget)
@@ -36,7 +38,7 @@ while i < numOfTrials and argsPassed:
         
         if cosDist > 0:
             root = ND.Node(None, startPage, 0)
-            foundTarget, distance, path, numNodes, numSims = WG.MCTS(root, endPage, webScraper, runEpct, expCont)
+            foundTarget, distance, path, numNodes, numSims = MCTS.MCTS(root, endPage, webScraper, runEpct, expCont)
             simMethod = "W2V"
 
             try:
