@@ -156,6 +156,9 @@ class Node:
         links = self.childrenLinks
         expandedChildren = {}
 
+        if numChildren < 0:
+            numChildren = len(links)
+
         # Check if any of the links appear in target page links
         terminusTitle = str(terminusName).replace("_", " ")
         for child in links:
