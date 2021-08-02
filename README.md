@@ -23,7 +23,7 @@ The command line arguments take the format: "python Main.py [outDir] [tarDep] [e
 * trials: (INT) Number of games you would like to run.
 * argType: (STRING ("UCT" or "EPCT")) Tells the system which algorithm you want to employ.
 
-### Bread/Depth First:
+### Breadth/Depth First:
 The command line arguments take the format "python BFS.py [trials] [tarDep]" and "python DFS.py [trials] [tarDep]".
 
 ## Setup (MANUAL)
