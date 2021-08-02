@@ -15,12 +15,16 @@ Analysing similarity between articles:
 * If the title is not known to the Wikipedia2Vec model we use the title of the first three links on that page and average across there vectors.
 
 ## Use Instructions
-The command line argument take the format: "python WikiGame.py [outDir] [tarDep] [explConst] [trials] [argType]", where these variables mean the following:
+### MCTS
+The command line arguments take the format: "python Main.py [outDir] [tarDep] [explConst] [trials] [argType]", where these variables mean the following:
 * outDir: (STRING) The relative directory for output files to be saved in.
 * tarDep: (INT) The number of random links to be followed from the start page to find a target page.
 * explConst: (FLOAT in range (0,1)) A constant used to edit the behaviour of the dynamic subset UCT algorithm.
 * trials: (INT) Number of games you would like to run.
 * argType: (STRING ("UCT" or "EPCT")) Tells the system which algorithm you want to employ.
+
+### Bread/Depth First:
+The command line arguments take the format "python BFS.py [trials] [tarDep]" and "python DFS.py [trials] [tarDep]".
 
 ## Setup (MANUAL)
 * pip -r install Requirements.txt
