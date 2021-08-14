@@ -4,6 +4,12 @@ import traceback
 
 class DFS(search.Search):
     def run(self, gameNum, depth):
+        """
+        Runs the full depth-first search.
+
+        :param gameNum: Trial number of the current game.
+        :param depth: The depth to choose a target page from the start page.
+        """
         worked = False
         self.filenamePrefix = "Data/DFS/"
 
@@ -18,7 +24,7 @@ class DFS(search.Search):
                 if cosDist > 0:
                     root = ND.Node(None, startPage, 0)
 
-                    for i in range(300):
+                    for i in range(100):
                         print(root.page.title)
                         found, children, foundDepth, path = root.expandChildren(endPage.title, expandedChildren, self.webScraper, -1)
                         expandedChildren.update(children)
@@ -27,7 +33,8 @@ class DFS(search.Search):
                             break
 
                         root = root.children[0]
-                    self.saveOutput("Data/DFS/", "DFS", gameNum, startPage, endPage, found, foundDepth, path, len(expandedChildren))
+                    fileName = "Data/DFS/DFS-" + str(depth) + "/"
+                    self.saveOutput(fileName, "DFS", gameNum, startPage, endPage, found, foundDepth, path, len(expandedChildren))
                     worked = True
 
             except:

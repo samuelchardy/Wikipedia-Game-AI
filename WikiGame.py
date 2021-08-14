@@ -2,6 +2,15 @@ import random
 
 class Output:
     def __init__(self, outcome, distance, path, numExpandedChildren, numSimulations):
+        """
+        Creates Output object that stores information for a given output line.
+
+        :param outcome: Was the target page found during the search.
+        :param distance: The distance from the start to target page.
+        :param path: The sequence of pages from start to target page.
+        :param numExpandedChildren: How many articles were explored.
+        :param numSimulations: The number of search iterations.
+        """
         self.outcome = outcome
         self.distance = distance
         self.path = path
@@ -11,9 +20,19 @@ class Output:
 
 
 def MCTS(root, terminus, webScraper, euct, exp):
+    """
+    Runs the MCTS search strategy.
+
+    :param root: The root Node of the search tree.
+    :param terminus: The wikipediaapi page that is the search target.
+    :param webScraper: A webScraper object that is used for a myriad of functions.
+    :param euct: The search strategy utilised.
+    :param exp: The used exploration constant.
+    :return: Output.outcome, Output.distance, Output.path, Output.numExpandedChildren, Output.numSimulations
+    """
     EXPL_CONST = exp
     output = []
-    numChildren = 10
+    numChildren = -1
 
     if euct == True:
         numChildren = 1
@@ -21,7 +40,7 @@ def MCTS(root, terminus, webScraper, euct, exp):
     terminusLinks = list(terminus.links.keys())
     expandedChildren = {} 
 
-    for i in range(300):
+    for i in range(100):
         print("\nITERATION " + str(i))
 
         # UCT
@@ -36,8 +55,8 @@ def MCTS(root, terminus, webScraper, euct, exp):
             if euct is True:
                 actionIndex = random.randrange(0, 100)
                 if actionIndex < EXPL_CONST*100:
-                    addedNode = node.addChildByProb(webScraper)         
-                    #addedNode = node.addBestChildByProb(webScraper)
+                    addedNode = node.addChildByProb()         
+                    #addedNode = node.addBestChildByProb()
                 if addedNode != False:
                     expandedChildren.update(addedNode) 
 
@@ -55,7 +74,7 @@ def MCTS(root, terminus, webScraper, euct, exp):
         # Expand
         if node.numOfVisits != 0 and len(node.childrenLinks) != 0:
             print("   Expand")
-            outcome, children, distance, path = node.expandChildren(terminus.title, expandedChildren, webScraper, numChildren)
+            outcome, children, distance, path = node.expandChildren(terminus.title, expandedChildren, numChildren)
             if outcome == True:
                 expandedChildren.update(children)
                 output.append(Output(outcome, distance, path, len(expandedChildren), i))
@@ -67,7 +86,7 @@ def MCTS(root, terminus, webScraper, euct, exp):
 
         # Simulate
         print("   Simulate")
-        node.rollout("RBRP", terminus.title, webScraper)
+        node.rollout("RBRP", terminus.title)
         
         # Backprop
         print("   Backprop")

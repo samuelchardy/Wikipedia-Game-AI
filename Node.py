@@ -6,7 +6,15 @@ import WebScraper as WB
 
 
 class Node:
-    def __init__(self, parent, articlePage, depth):
+    def __init__(self, parent, articlePage, depth, webScraper):
+        """
+        Creates a Node and initialises the relevant attributes for proper operation.
+
+        :param parent: The Node object that created this Node.
+        :param articlePage: A wikipediaapi page for this Node's wikipedia article.
+        :param depth: The depth of this node in the Monte-Carlo tree.
+        :param webScraper: An object of the WebScraper class which provides much functionality.
+        """
         self.parent = parent
         self.depth = depth
         self.page = articlePage
@@ -16,10 +24,15 @@ class Node:
         self.children = []
         self.reserveChildren = {}
         self.reserveDist = {}
-        self.childrenLinks = WB.WebScraper().filterLinks(list(self.page.links.keys()))
+        self.webScraper = webScraper
+        self.childrenLinks = self.webScraper.filterLinks(list(self.page.links.keys()))
 
 
     def calcUCT(self):
+        """
+        Calculates/updates the upper confidence bound for trees value for this Node,
+        storeing it as an instance variable.
+        """
         if self.numOfVisits == 0:
             self.uct = 100000.0
         else:
@@ -28,7 +41,12 @@ class Node:
             self.uct = (self.subTreeVal/self.numOfVisits) + explore
 
 
-    def addBestChildByProb(self, webScraper):
+    def addBestChildByProb(self):
+        """
+        Probabilistically selects the highest reward child Node from this Node for expansion.
+
+        :return: A dict of the title of the best page and the current tree depth.
+        """
         EXPL_CONST = 0.3
         key = list(self.reserveChildren.keys())
 
@@ -41,8 +59,8 @@ class Node:
         newActionProb = self.reserveChildren[key] * EXPL_CONST * 100
 
         if actionIndex < newActionProb:
-            newPage = webScraper.wiki.page(key)
-            nodeToAdd = Node(self, newPage, self.depth+1)
+            newPage = self.webScraper.wiki.page(key)
+            nodeToAdd = Node(self, newPage, self.depth+1, self.webScraper)
 
             self.children.append(nodeToAdd)
             del self.reserveChildren[key]
@@ -51,8 +69,13 @@ class Node:
             return False
 
 
+    def addChildByProb(self):
+        """
+        Selects a child Node of this Node to expand where selection
+        probability is proportional to child Node reward.
 
-    def addChildByProb(self, webScraper):
+        :return: A dict of the title of the page to expand and the current tree depth.
+        """
         if self.reserveDist == None:
             return False
 
@@ -65,8 +88,8 @@ class Node:
         for key in keys:
             if self.reserveDist[key]*100 > actionIndex:
                 if self.notAlreadyBeenTaken(key):
-                    newPage = webScraper.wiki.page(key)
-                    nodeToAdd = Node(self, newPage, self.depth+1)
+                    newPage = self.webScraper.wiki.page(key)
+                    nodeToAdd = Node(self, newPage, self.depth+1, self.webScraper)
 
                     self.children.append(nodeToAdd)
                     #del self.reserveChildren[key]
@@ -80,6 +103,12 @@ class Node:
 
 
     def notAlreadyBeenTaken(self, key):
+        """
+        Checks is a page has been explored previously, and returns the result.
+
+        :param key: The title of the page to check.
+        :return: Boolean value, for if a child Node has already been explored.
+        """
         for child in self.children:
             if child.page.title == key:
                 return False
@@ -87,7 +116,13 @@ class Node:
 
 
     def makeReservesDist(self, reserveChildren):
-        #self.reserveDist.clear()
+        """
+        Creates a dict for storing unselected child Nodes,
+        and updates their selection probability. 
+
+        :param reserveChildren: child Nodes that are not currently considered by UCT.
+        :return: An updated dict of titles and selections probabilities based.
+        """
         reserveDist = {}
 
         if len(reserveChildren) > 0:
@@ -102,8 +137,13 @@ class Node:
             return reserveDist
 
 
+    def rollout(self, policy, terminusName):
+        """
+        Performs the rollout function of MCTS by assessing future rewards.
 
-    def rollout(self, policy, terminusName, webScraper):
+        :param policy: The action selection strategy.
+        :param terminusName: The title of the target wikipedia page.
+        """
         page = self.page
         links = self.childrenLinks
         self.subTreeVal = 0
@@ -120,7 +160,7 @@ class Node:
                 nlpScore = {}
 
                 for child in links:
-                    nlpScore[child] = webScraper.nlpSimilarity(child, terminusName, [])
+                    nlpScore[child] = self.webScraper.nlpSimilarity(child, terminusName, [])
 
                 sortedList = sorted(nlpScore.items(), key=lambda x:(-x[1],x[0]))
                 sortedList = dict(sortedList)
@@ -139,12 +179,12 @@ class Node:
                 action = links[actionIndex]
                 action = action.replace(" ", "_")
                 #print(action)
-                page = webScraper.wiki.page(action)
-                links = webScraper.filterLinks(list(page.links.keys()))
-                self.subTreeVal = self.subTreeVal + webScraper.nlpSimilarity(page.title, terminusName, links)
+                page = self.webScraper.wiki.page(action)
+                links = self.webScraper.filterLinks(list(page.links.keys()))
+                self.subTreeVal = self.subTreeVal + self.webScraper.nlpSimilarity(page.title, terminusName, links)
                 #self.subTreeVal = self.subTreeVal + webScraper.genismSimilarity(page.title, terminusName)
             except:
-                traceback.print_exc()
+                raise
                 print("       404 - HTTP FAILED CONNECTION - " + action)
                 i = i-1
 
@@ -152,7 +192,15 @@ class Node:
         self.numOfVisits = self.numOfVisits + 1
 
 
-    def expandChildren(self, terminusName, expanded, webScraper, numChildren):
+    def expandChildren(self, terminusName, expanded, numChildren):
+        """
+        Expands a Node by initialises the child Nodes that correspond to page links.
+
+        :param terminusName: The title of the target wikipedia page.
+        :param expanded: A list of the currently expanded pages.
+        :param numChildren: The number of children to expand from each Node.
+        :return: Is target found, updated list of expanded Nodes, depth of target if found, path to target if found.
+        """
         links = self.childrenLinks
         expandedChildren = {}
 
@@ -178,7 +226,7 @@ class Node:
         nlpScore = {}
 
         for child in links:
-            nlpScore[child] = webScraper.nlpSimilarity(child, terminusName, [])
+            nlpScore[child] = self.webScraper.nlpSimilarity(child, terminusName, [])
             
         sortedList = sorted(nlpScore.items(), key=lambda x:(-x[1],x[0]))
         banditArms = dict(sortedList)
@@ -187,8 +235,8 @@ class Node:
         for key in banditArms.keys():
             if key not in expandedArticles:
                 if len(self.children) < numChildren:
-                    newPage = webScraper.wiki.page(key)
-                    nodeToAdd = Node(self, newPage, self.depth+1)
+                    newPage = self.webScraper.wiki.page(key)
+                    nodeToAdd = Node(self, newPage, self.depth+1, self.webScraper)
                     self.children.append(nodeToAdd)
                     expandedChildren.update({key: self.depth+1})
                 else:
@@ -199,5 +247,11 @@ class Node:
 
 
     def backpropUpdates(self, rolloutVal):
+        """
+        Performs the backpropagations functionality of MCTS, including
+        updating the Node value and visit quantities.
+
+        :param rolloutVal: The value of the rollout of this node.
+        """
         self.subTreeVal = self.subTreeVal + rolloutVal
         self.numOfVisits = self.numOfVisits + 1

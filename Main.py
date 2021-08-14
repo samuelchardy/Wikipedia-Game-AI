@@ -1,4 +1,5 @@
 import traceback
+from resource import getrusage, RUSAGE_SELF
 import Node as ND
 import WebScraper as WB
 import WikiGame as WG
@@ -26,6 +27,10 @@ if argType != "UCT":
     runEpct = True
 
 
+for arg in sys.argv:
+    print(str(arg) + "\n")
+
+
 while i < numOfTrials and argsPassed:
     startPage, endPage = webScraper.getStartEndPair(depthOfTarget)
 
@@ -35,7 +40,7 @@ while i < numOfTrials and argsPassed:
         print(startPage.title + "  ---  " + endPage.title)
         
         if cosDist > 0:
-            root = ND.Node(None, startPage, 0)
+            root = ND.Node(None, startPage, 0, webScraper)
             foundTarget, distance, path, numNodes, numSims = WG.MCTS(root, endPage, webScraper, runEpct, expCont)
             simMethod = "W2V"
 
@@ -45,12 +50,6 @@ while i < numOfTrials and argsPassed:
                 file = open(filename, "w")
                 file.write(line)
                 file.close()
-
-                # exeTime = time.time() - startTime
-
-                # while True:
-                #     print(exeTime)
-
             except:
                 line = "_,_," + str(foundTarget) + "," + str(distance) + ",_," + str(numNodes) + "," + str(numSims) + "," + simMethod + "," + argType + "," + str(expCont) + "\n"
                 filename = filenamePrefix + str(i) + ".csv"
@@ -58,13 +57,9 @@ while i < numOfTrials and argsPassed:
                 file.write(line)
                 file.close()
 
-                # exeTime = time.time() - startTime
-
-                # while True:
-                #     print(exeTime)
-
             i = i + 1
     except:
-        traceback.print_exc()
+        raise Exception()
         print("Start fail - getting new start node")
 
+print(getrusage(RUSAGE_SELF).ru_maxrss)
